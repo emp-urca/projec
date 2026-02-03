@@ -1,11 +1,14 @@
-name: Compilar Cronograma Dinâmico
+name: Compilar e Arquivar LaTeX
 
 on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 9 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *' # Roda todo dia à meia-noite
+  workflow_dispatch: # Permite rodar manualmente para testar
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -14,53 +17,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar TeX Live
-        # Instalando o compilador básico para o comando pdflatex funcionar
+      - name: Verificar Prazo Final
+        id: check_date
         run: |
-          sudo apt-get update
-          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra
+          CURRENT_DATE=$(date +%Y-%m-%d)
+          DEADLINE="2026-02-03"
+          if [[ "$CURRENT_DATE" > "$DEADLINE" ]]; then
+            echo "Prazo expirado ($DEADLINE). Encerrando."
+            exit 1
+          fi
 
-      - name: Processar Cronograma e Compilar
+      - name: Compilar LaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+
+      - name: Organizar e Versionar Arquivo
         run: |
           mkdir -p publish
-          # Pega a data atual no formato AAAAMMDD (Ex: 20240520)
-          HOJE=$(date +%Y%m%d)
-          
-          # 1. Verifique se o caminho do arquivo está correto (com .csv)
-          # 2. Usei tr -d '\r' para remover caracteres invisíveis de arquivos Windows/Excel
-          tail -n +2 "dados/cronograma.csv" | tr -d '\r' | while IFS=',' read -r numero assunto curta data_csv; do
-            
-            # Remove espaços em branco extras das variáveis
-            numero=$(echo $numero | xargs)
-            curta=$(echo $curta | xargs)
-            data_csv=$(echo $data_csv | xargs)
-            
-            # Converte data DD/MM/AAAA para AAAAMMDD
-            DATA_ISO=$(echo $data_csv | awk -F'/' '{print $3$2$1}')
-            
-            echo "Checando Item $numero: Data $DATA_ISO contra Hoje $HOJE"
-
-            if [ "$DATA_ISO" -le "$HOJE" ]; then
-              echo "✅ Data atingida! Compilando item $numero..."
-              
-              # Comando para injetar as variáveis no LaTeX
-              # Importante: o \input{main.tex} deve ser o último comando
-              PREAMBLE="\def\VARNumero{$numero}\def\VARAssunto{$assunto}"
-              
-              pdflatex -jobname="resultado_${numero}" "$PREAMBLE\input{main.tex}"
-              
-              # Move para a pasta que será publicada
-              if [ -f "resultado_${numero}.pdf" ]; then
-                cp "resultado_${numero}.pdf" "publish/edital_${numero}_${curta}.pdf"
-              fi
-            else
-              echo "⏳ Item $numero agendado para $data_csv. Pulando..."
-            fi
-          done
+          TIMESTAMP=$(date +%Y%m%d_%H%M)
+          # Mantém o arquivo principal e cria uma cópia única
+          cp main.pdf publish/main.pdf
+          cp main.pdf publish/main_${TIMESTAMP}.pdf
 
       - name: Deploy para GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./publish
-          keep_files: true
+          keep_files: true # CRITICAL: Mantém os PDFs antigos no site
+          force_orphan: false
