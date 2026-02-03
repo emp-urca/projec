@@ -1,14 +1,11 @@
-name: Compilar e Arquivar LaTeX
+name: Compilar Cronograma Dinâmico
 
 on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * *' # Roda todo dia à meia-noite
-  workflow_dispatch: # Permite rodar manualmente para testar
-
-permissions:
-  contents: write
+    - cron: '0 9 * * *' # Roda todo dia às 06h (Brasília)
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,33 +14,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verificar Prazo Final
-        id: check_date
-        run: |
-          CURRENT_DATE=$(date +%Y-%m-%d)
-          DEADLINE="2026-02-03"
-          if [[ "$CURRENT_DATE" > "$DEADLINE" ]]; then
-            echo "Prazo expirado ($DEADLINE). Encerrando."
-            exit 1
-          fi
-
-      - name: Compilar LaTeX
-        uses: xu-cheng/latex-action@v3
-        with:
-          root_file: main.tex
-
-      - name: Organizar e Versionar Arquivo
+      - name: Processar Cronograma e Compilar
         run: |
           mkdir -p publish
-          TIMESTAMP=$(date +%Y%m%d_%H%M)
-          # Mantém o arquivo principal e cria uma cópia única
-          cp main.pdf publish/main.pdf
-          cp main.pdf publish/main_${TIMESTAMP}.pdf
+          HOJE=$(date +%Y%m%d)
+          
+          # Pula o cabeçalho e lê o CSV (ajuste o separador se necessário)
+          tail -n +2 dados/cronograma.csv | while IFS=',' read -r numero assunto curta data_csv; do
+            
+            # Converte data DD/MM/AAAA para AAAAMMDD para comparar
+            DATA_ISO=$(echo $data_csv | awk -F'/' '{print $3$2$1}')
+            
+            if [ "$DATA_ISO" -le "$HOJE" ]; then
+              echo "Processando item $numero: $curta"
+              
+              # Opcional: Passar dados para o LaTeX via comando
+              # Isso permite usar \VARNumero no main.tex
+              EXTRA_ARGS="\def\VARNumero{$numero}\def\VARAssunto{$assunto}\input{main.tex}"
+              
+              # Compilação personalizada para cada linha
+              pdflatex -jobname="resultado_${numero}" "$EXTRA_ARGS"
+              
+              # Move para pasta de publicação com nome único
+              cp "resultado_${numero}.pdf" "publish/edital_${numero}_${curta}.pdf"
+            fi
+          done
 
       - name: Deploy para GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./publish
-          keep_files: true # CRITICAL: Mantém os PDFs antigos no site
-          force_orphan: false
+          keep_files: true
