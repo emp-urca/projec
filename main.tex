@@ -5,6 +5,21 @@
 \author{Evanio Mascarenhas Paulo}
 \date{February 2026}
 
+% Definimos comandos padrão para o Overleaf não dar erro ao compilar sozinho
+\providecommand{\VARNumero}{000}
+\providecommand{\VARAssunto}{Assunto Padrão}
+\providecommand{\VARCurta}{Curta}
+
+\begin{document}
+    % Agora você usa as variáveis onde quiser no texto:
+    \section*{Edital Número \VARNumero}
+    \textbf{Referente a:} \VARAssunto
+    
+    Este documento foi gerado automaticamente para o evento \VARCurta.
+\end{document}
+
+
+
 \begin{document}
 
 \maketitle
