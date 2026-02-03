@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 9 * * *' # Roda todo dia às 06h (Brasília)
+    - cron: '0 9 * * *'
   workflow_dispatch:
 
 jobs:
@@ -14,29 +14,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Instalar TeX Live
+        # Instalando o compilador básico para o comando pdflatex funcionar
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra
+
       - name: Processar Cronograma e Compilar
         run: |
           mkdir -p publish
+          # Pega a data atual no formato AAAAMMDD (Ex: 20240520)
           HOJE=$(date +%Y%m%d)
           
-          # Pula o cabeçalho e lê o CSV (ajuste o separador se necessário)
-          tail -n +2 dados/cronograma | while IFS=',' read -r numero assunto curta data_csv; do
+          # 1. Verifique se o caminho do arquivo está correto (com .csv)
+          # 2. Usei tr -d '\r' para remover caracteres invisíveis de arquivos Windows/Excel
+          tail -n +2 "dados/cronograma.csv" | tr -d '\r' | while IFS=',' read -r numero assunto curta data_csv; do
             
-            # Converte data DD/MM/AAAA para AAAAMMDD para comparar
+            # Remove espaços em branco extras das variáveis
+            numero=$(echo $numero | xargs)
+            curta=$(echo $curta | xargs)
+            data_csv=$(echo $data_csv | xargs)
+            
+            # Converte data DD/MM/AAAA para AAAAMMDD
             DATA_ISO=$(echo $data_csv | awk -F'/' '{print $3$2$1}')
             
+            echo "Checando Item $numero: Data $DATA_ISO contra Hoje $HOJE"
+
             if [ "$DATA_ISO" -le "$HOJE" ]; then
-              echo "Processando item $numero: $curta"
+              echo "✅ Data atingida! Compilando item $numero..."
               
-              # Opcional: Passar dados para o LaTeX via comando
-              # Isso permite usar \VARNumero no main.tex
-              EXTRA_ARGS="\def\VARNumero{$numero}\def\VARAssunto{$assunto}\input{main.tex}"
+              # Comando para injetar as variáveis no LaTeX
+              # Importante: o \input{main.tex} deve ser o último comando
+              PREAMBLE="\def\VARNumero{$numero}\def\VARAssunto{$assunto}"
               
-              # Compilação personalizada para cada linha
-              pdflatex -jobname="resultado_${numero}" "$EXTRA_ARGS"
+              pdflatex -jobname="resultado_${numero}" "$PREAMBLE\input{main.tex}"
               
-              # Move para pasta de publicação com nome único
-              cp "resultado_${numero}.pdf" "publish/edital_${numero}_${curta}.pdf"
+              # Move para a pasta que será publicada
+              if [ -f "resultado_${numero}.pdf" ]; then
+                cp "resultado_${numero}.pdf" "publish/edital_${numero}_${curta}.pdf"
+              fi
+            else
+              echo "⏳ Item $numero agendado para $data_csv. Pulando..."
             fi
           done
 
