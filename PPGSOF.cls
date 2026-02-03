@@ -52,7 +52,7 @@
         % Rodapé da Página (Opcional: se quiser fixo no final da página)
         \node[anchor=south west, align=left] at ([shift={(1cm, 0.5cm)}]current page.south west) {
             \fontsize{9}{11}\selectfont
-            Edital nº 007/\the\year\ -- PPGSOF  \\
+            Edital nº \VARNumero/\the\year\ -- PPGSOF - \VARCurta  \\
             \fontsize{9}{11}\selectfont
             Publicado em \today.
         };

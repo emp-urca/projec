@@ -1,29 +1,44 @@
-\documentclass{article}
-\usepackage{graphicx} % Required for inserting images
 
-\title{Projec}
-\author{Evanio Mascarenhas Paulo}
-\date{February 2026}
+%-----------------------------------------------------------------------
+% CONFIGURAÇÃO DO DOCUMENTO
+%-----------------------------------------------------------------------
+\documentclass{PPGSOF}
 
 % Definimos comandos padrão para o Overleaf não dar erro ao compilar sozinho
 \providecommand{\VARNumero}{000}
 \providecommand{\VARAssunto}{Assunto Padrão}
 \providecommand{\VARCurta}{Curta}
 
+% Aplica a estilização personalizada do cabeçalho PPGSOF
+\fancyhead[C]{\fancyheadppgsof}
+\renewcommand{\headrulewidth}{0pt}
+
+%-----------------------------------------------------------------------
 \begin{document}
-    % Agora você usa as variáveis onde quiser no texto:
-    \section*{Edital Número \VARNumero}
-    \textbf{Referente a:} \VARAssunto
-    
-    Este documento foi gerado automaticamente para o evento \VARCurta.
-\end{document}
+%-----------------------------------------------------------------------
+
+% Identificação do Edital
+\cabecalhoEdital{\VARNumero}
+
+% Ementa do Documento
+\ementa{Edital de \VARAssunto\  para o processo de seleção da turma \celula{dados/selecao}{Turma}{1} no Programa de Pós-Graduação em Sociedade e Fronteiras - PPGSOF.}
+
+% Corpo do Texto - Preâmbulo
+A Comissão de Seleção do Programa de Pós-graduação em Sociedade e Fronteiras - PPGSOF da Universidade Federal de Roraima - UFRR, designada pela Portaria n.º \celula{dados/selecao}{Portaria}{1} - PPGSOF, de \celula{dados/selecao}{Data}{1}, e em conformidade com a Resolução n.º 010/2016 - CEPE e o Regimento Interno do PPGSOF,
+
+\vspace{0.5cm}
+\noindent \textbf{RESOLVE:}
+\vspace{0.5cm}
+
+% Artigos do Edital
+
+    \textbf{Art. 1º.} Tornar público \VARAssunto\ para o processo seletivo de ingresso no Curso de Mestrado em Sociedade e Fronteiras da UFRR, referente ao Edital n.º \celula{dados/selecao}{Edital}{1} -- PPGSOF, lançado em \celula{dados/selecao}{Lançamento}{1}.
 
 
-
-\begin{document}
-
-\maketitle
-
-\section{Introduction}
+% Área de Assinaturas
+\assinaturaTres{%
+     \celula{dados/selecao}{Presidente}{1}}%
+    {\celula{dados/selecao}{Membro1}{1}}%
+    {\celula{dados/selecao}{Membro2}{1}}
 
 \end{document}
