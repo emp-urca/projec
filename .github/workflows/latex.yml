@@ -20,7 +20,7 @@ jobs:
           HOJE=$(date +%Y%m%d)
           
           # Pula o cabeçalho e lê o CSV (ajuste o separador se necessário)
-          tail -n +2 dados/cronograma.csv | while IFS=',' read -r numero assunto curta data_csv; do
+          tail -n +2 dados/cronograma | while IFS=',' read -r numero assunto curta data_csv; do
             
             # Converte data DD/MM/AAAA para AAAAMMDD para comparar
             DATA_ISO=$(echo $data_csv | awk -F'/' '{print $3$2$1}')
