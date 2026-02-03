@@ -51,7 +51,7 @@ jobs:
               
               # Move para a pasta que será publicada
               if [ -f "resultado_${numero}.pdf" ]; then
-                cp "resultado_${numero}.pdf" "publish/edital_${numero}_${curta}.pdf"
+                cp "resultado_${numero}.pdf" "publish/edital_${numero}.pdf"
               fi
             else
               echo "⏳ Item $numero agendado para $data_csv. Pulando..."
