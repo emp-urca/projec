@@ -1,0 +1,7 @@
+/* Gera o texto de Inscrição Genérica formatando o valor */
+GERAR_INSCRICAO = LAMBDA(valor_f31,
+    "Inscrição Genérica:" & CARACT(10) & 
+    "ICCDX" & ESQUERDA(TEXTO(valor_f31; "000000"); 2) & DIREITA(valor_f31; 2) & CARACT(10) & 
+    "8.1.2.3.1.02.01" & CARACT(10) & 
+    "Contratos de Serviços em Execução"
+);
